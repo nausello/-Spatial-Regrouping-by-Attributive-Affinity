@@ -1,12 +1,25 @@
 Package: spatialRegroup
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Title: Spatial Regrouping by Attributive Affinity
+Version: 0.1.0
+Authors@R: person(given = 'Nicolas', family = 'A',
+    email = 'nicolasausello@yahoo.fr', role = c('aut', 'cre'))
+Description: Identifies and reclassifies spatial units such as 
+    municipalities that are statistically more similar to neighboring 
+    groups than to their own administrative group such as EPCI. 
+    Computes attributive affinity based on euclidean distance, 
+    detects border units, removes isolated candidates, and reassigns 
+    them to the most similar neighboring group. 
+    Includes tools for multilevel model comparison (AIC, ICC) to 
+    evaluate whether the recomposed grouping better explains the 
+    outcome variable than the original administrative partition.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
+Imports:
+    sf,
+    spdep,
+    dplyr,
+    lme4,
+    performance,
+    tmap
