@@ -24,11 +24,7 @@ neighboring groups than to their own.
 - **Built-in model comparison** : evaluates whether the recomposed 
   partition better explains an outcome variable than the original 
   administrative partition, using multilevel models (AIC, ICC)
-
 ---
-
-## Why spatialRegroup ?
- 
 `spatialRegroup` tests whether these boundaries are **statistically 
 coherent** by asking:
 
