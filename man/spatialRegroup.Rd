@@ -27,7 +27,7 @@ spatialRegroup(
 \item{verbose}{Messages de progression (defaut TRUE)}
 }
 \value{
-sf object avec colonne {group_var}_regroup
+An sf object identical to the input with two new columns: 'EPCI_regroup' (new group assignment) and 'candidate' (logical, TRUE if reclassified).
 }
 \description{
 Regroupement spatial par affinite attributaire

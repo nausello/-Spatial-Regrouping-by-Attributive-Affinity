@@ -1,0 +1,81 @@
+---
+title: "Introduction to spatialRegroup"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to spatialRegroup}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+The `spatialRegroup` package identifies spatial units that are
+statistically more similar to a neighboring group than to their own.
+It is particularly useful for detecting boundary effects between
+administrative units such as EPCI, districts, or counties.
+
+## Installation
+
+```{r install, eval=FALSE}
+devtools::install_github("ause31/-Spatial-Regrouping-by-Attributive-Affinity")
+```
+
+## Basic example
+
+```{r example}
+library(sf)
+library(dplyr)
+library(spatialRegroup)
+
+# Create a simulated 4x4 grid
+set.seed(123)
+grid <- st_make_grid(
+  st_as_sfc(st_bbox(c(xmin=0, ymin=0, xmax=100, ymax=100))),
+  n = c(4, 4)
+)
+
+polygons <- st_as_sf(data.frame(geometry = grid)) %>%
+  mutate(
+    id   = row_number(),
+    EPCI = paste0("G", ceiling(id / 4)),
+    rev  = rnorm(16, 30000, 5000),
+    prix = rnorm(16, 3000,  500)
+  )
+
+# Run spatialRegroup
+result <- spatialRegroup(
+  data      = polygons,
+  group_var = "EPCI",
+  vars_attr = c("rev", "prix"),
+  verbose   = TRUE
+)
+
+# Results
+table(result$candidate)
+```
+
+## Interpreting results
+
+The output contains two key columns:
+
+- `candidate` : TRUE if the unit was reclassified
+- `EPCI_regroup` : the new group after reclassification
+
+## Comparing partitions with multilevel models
+
+```{r models, eval=FALSE}
+library(lme4)
+library(performance)
+
+m_init <- lmer(rev ~ prix + (1|EPCI),        data = result, REML = FALSE)
+m_new  <- lmer(rev ~ prix + (1|EPCI_regroup), data = result, REML = FALSE)
+
+data.frame(
+  modele = c("Initial", "Recomposed"),
+  AIC    = round(c(AIC(m_init), AIC(m_new)), 1)
+)
+```

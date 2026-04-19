@@ -5,7 +5,7 @@
 #' @param remove_isolates Reintegrer les isolats (defaut TRUE)
 #' @param nb_type "queen" ou "rook"
 #' @param verbose Messages de progression (defaut TRUE)
-#' @return sf object avec colonne {group_var}_regroup
+#' @return An sf object identical to the input with two new columns: 'EPCI_regroup' (new group assignment) and 'candidate' (logical, TRUE if reclassified).
 #' @export
 spatialRegroup <- function(data, group_var, vars_attr,
                            remove_isolates = TRUE,

@@ -1,11 +1,14 @@
 Package: spatialRegroup
 Title: Spatial Regrouping by Attributive Affinity
 Version: 0.1.0
-Authors@R: person(given = 'Nicolas', family = 'A',
+Authors@R: person(given = 'Nicolas', family = 'Ausello',
     email = 'nicolasausello@yahoo.fr', role = c('aut', 'cre'))
 Description: Identifies and reclassifies spatial units such as
     municipalities that are statistically more similar to neighboring
-    groups than to their own administrative group such as EPCI.
+    groups than to their own administrative group. The acronym EPCI
+    (Etablissement Public de Cooperation Intercommunale) refers to
+    French intercommunal administrative units, used here as an example
+    of grouped spatial partitions.
     Computes attributive affinity based on euclidean distance,
     detects border units, removes isolated candidates, and reassigns
     them to the most similar neighboring group.
@@ -16,8 +19,11 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
 Imports:
     sf,
     spdep,
     dplyr,
     rlang
+
