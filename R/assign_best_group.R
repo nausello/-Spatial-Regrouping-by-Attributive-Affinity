@@ -6,8 +6,8 @@
 #' @return data.frame avec id_row et best_group
 #' @export
 assign_best_group <- function(data, group_var, vars_attr, profiles) {
-  candidates     <- data %>% dplyr::filter(candidate)
-  non_candidates <- data %>% dplyr::filter(!candidate)
+  candidates     <- data |> dplyr::filter(candidate)
+  non_candidates <- data |> dplyr::filter(!candidate)
   touches        <- sf::st_touches(candidates, non_candidates)
 
   results <- lapply(seq_len(nrow(candidates)), function(i) {
@@ -20,8 +20,8 @@ assign_best_group <- function(data, group_var, vars_attr, profiles) {
     best_group <- NA_character_
     min_dist   <- Inf
     for (g in neighbor_groups) {
-      profile <- profiles %>%
-        dplyr::filter(.data[[group_var]] == g) %>%
+      profile <- profiles |>
+        dplyr::filter(.data[[group_var]] == g) |>
         dplyr::select(dplyr::all_of(vars_attr))
       if (nrow(profile) == 0) next
       d <- sqrt(sum((xi - as.numeric(profile))^2, na.rm = TRUE))

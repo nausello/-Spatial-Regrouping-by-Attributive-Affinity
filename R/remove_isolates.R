@@ -13,10 +13,10 @@ remove_isolates <- function(data, nb) {
   })
   a_corriger <- candidate_ids[isolat_idx]
   if (length(a_corriger) > 0) {
-    message(length(a_corriger), " isolat(s) reintegre(s)")
+    message(length(a_corriger), " isolated candidate(s) reintegrated")
     data$candidate[a_corriger] <- FALSE
   } else {
-    message("Aucun isolat detecte")
+    message("No isolated candidates detected")
   }
   return(data)
 }

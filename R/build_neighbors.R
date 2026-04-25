@@ -4,7 +4,7 @@
 #' @return Un objet nb (spdep)
 #' @export
 build_neighbors <- function(data, type = "queen") {
-  if (!inherits(data, "sf")) stop("data doit etre un objet sf")
+  if (!inherits(data, "sf")) stop("'data' must be an sf object")
   nb <- if (type == "queen") {
     spdep::poly2nb(data, queen = TRUE)
   } else {
