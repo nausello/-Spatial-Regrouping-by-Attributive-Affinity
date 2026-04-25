@@ -35,12 +35,5 @@ This approach reveals **boundary effects** between macro-units :
 zones where two neighboring administrative entities share more 
 socio-economic similarities than expected, suggesting that the 
 administrative boundary may be cutting through a functionally 
-homogeneous territory.
-
-This is particularly relevant for:
-- **Fiscal analysis** (tax rates, municipal budgets)
-- **Urban economics** (housing markets, commuting zones)
-- **Public policy evaluation** (health districts, school zones)
-- **Electoral geography** (constituency coherence)
-
+homogeneous territory. 
 ---
