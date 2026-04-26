@@ -31,8 +31,8 @@ spatialRegroup <- function(data, group_var, vars_attr,
                   candidate = FALSE)
 
   new_var <- paste0(group_var, "_regroup")
-  data[[new_var]] <- as.character(data[[group_var]])
-
+  data <- data |>
+    dplyr::mutate(!!new_var := as.character(.data[[group_var]]))
   # Historique des etats pour detection de cycles (point 2)
   states_history <- character(0)
 
@@ -110,6 +110,30 @@ spatialRegroup <- function(data, group_var, vars_attr,
         )
       ) %>%
       dplyr::select(-best_group_iter)
+
+    # ── Controle post-rattachement : reversion des isolats dans le nouveau groupe
+    df_tmp  <- sf::st_drop_geometry(data)
+    # Indices des unites dont le groupe a change par rapport a l'etat avant
+    reclassees_idx <- which(as.character(df_tmp[[new_var]]) != state_avant)
+
+    if (length(reclassees_idx) > 0) {
+      isolats_post <- sapply(reclassees_idx, function(i) {
+        nouveau_groupe <- df_tmp[[new_var]][i]
+        voisins <- unlist(nb[[i]])
+        voisins <- voisins[!is.na(voisins) & voisins > 0]
+        # Isolat si aucun voisin n'appartient au nouveau groupe
+        length(voisins) == 0 ||
+          !any(df_tmp[[new_var]][voisins] == nouveau_groupe, na.rm = TRUE)
+      })
+
+      idx_reverter <- reclassees_idx[isolats_post]
+
+      if (length(idx_reverter) > 0) {
+        if (verbose) message(length(idx_reverter),
+                             " isolat(s) post-rattachement reverte(s)")
+        data[[new_var]][idx_reverter] <- state_avant[idx_reverter]
+      }
+    }
 
     # ── Point 1 : n_reclassed = unites dont l'affectation a reellement change ─
     n_reclassed <- sum(as.character(data[[new_var]]) != state_avant, na.rm = TRUE)
