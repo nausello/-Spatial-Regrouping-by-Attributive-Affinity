@@ -134,11 +134,14 @@ spatialRegroup <- function(data, group_var, vars_attr,
     states_history <- c(states_history, state_actuel)
   }
 
-  if (verbose) {
-    n_total <- sum(
-      as.character(data[[group_var]]) != as.character(data[[new_var]]),
-      na.rm = TRUE
+  # ── candidate = unites effectivement reclassees (groupe initial != final) ───
+  data <- data %>%
+    dplyr::mutate(
+      candidate = as.character(.data[[group_var]]) != as.character(.data[[new_var]])
     )
+
+  if (verbose) {
+    n_total <- sum(data$candidate, na.rm = TRUE)
     message("Termine : ", n_total, "/", nrow(data),
             " unites reclassees au total")
   }
