@@ -1,6 +1,6 @@
 Package: spatialRegroup
 Title: Spatial Regrouping by Attributive Affinity
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person(given = 'Nicolas', family = 'Ausello',
     email = 'nicolasausello@yahoo.fr', role = c('aut', 'cre'))
 Description: Identifies and reclassifies spatial units such as
@@ -28,5 +28,5 @@ Imports:
     sf,
     spdep,
     dplyr,
-    rlang
-
+    rlang,
+    igraph

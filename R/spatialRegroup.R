@@ -205,9 +205,10 @@ spatialRegroup <- function(data, group_var, vars_attr,
   }
 
   # ════════════════════════════════════════════════════════════════════════════
-  # POST-TRAITEMENT : isolats residuels + groupes vides
+  # POST-TRAITEMENT : isolats (reclasses ET non-reclasses) + groupes vides
+  #                 + connectivite des groupes resultants (point 5)
   # ════════════════════════════════════════════════════════════════════════════
-  if (verbose) message("── Post-traitement : isolats residuels et groupes vides...")
+  if (verbose) message("── Post-traitement : isolats, groupes vides, connectivite...")
 
   groupes_originaux <- unique(as.character(sf::st_drop_geometry(data)[[group_var]]))
 
@@ -216,19 +217,36 @@ spatialRegroup <- function(data, group_var, vars_attr,
     df_post <- sf::st_drop_geometry(data)
     modifie <- FALSE
 
+    # ── Etape 1 : isolats (toutes les unites, pas seulement les reclassees) ───
     for (i in seq_len(nrow(data))) {
       groupe_i <- df_post[[new_var]][i]
       voisins  <- unlist(nb[[i]])
       voisins  <- voisins[!is.na(voisins) & voisins > 0]
       est_isole <- length(voisins) == 0 ||
         !any(df_post[[new_var]][voisins] == groupe_i, na.rm = TRUE)
-      if (est_isole && df_post[[new_var]][i] != df_post[[group_var]][i]) {
-        data[[new_var]][i]    <- as.character(df_post[[group_var]][i])
-        df_post[[new_var]][i] <- as.character(df_post[[group_var]][i])
+
+      if (est_isole) {
+        if (df_post[[new_var]][i] != df_post[[group_var]][i]) {
+          # Unite reclassee isolee → revert vers groupe d'origine
+          data[[new_var]][i]    <- as.character(df_post[[group_var]][i])
+          df_post[[new_var]][i] <- as.character(df_post[[group_var]][i])
+        } else {
+          # Unite non-reclassee mais isolee (tous ses voisins ont change) →
+          # reassigner au groupe le plus representé parmi ses voisins
+          voisins_groupes <- df_post[[new_var]][voisins]
+          voisins_groupes <- voisins_groupes[!is.na(voisins_groupes)]
+          if (length(voisins_groupes) > 0) {
+            nouveau_groupe <- names(sort(table(voisins_groupes),
+                                         decreasing = TRUE))[1]
+            data[[new_var]][i]    <- nouveau_groupe
+            df_post[[new_var]][i] <- nouveau_groupe
+          }
+        }
         modifie <- TRUE
       }
     }
 
+    # ── Etape 2 : groupes originaux vides → restituer une commune ─────────────
     groupes_finaux <- unique(as.character(df_post[[new_var]]))
     groupes_vides  <- setdiff(groupes_originaux, groupes_finaux)
     for (g in groupes_vides) {
@@ -238,6 +256,58 @@ spatialRegroup <- function(data, group_var, vars_attr,
         data[[new_var]][idx_g[1]]    <- g
         df_post[[new_var]][idx_g[1]] <- g
         modifie <- TRUE
+      }
+    }
+
+    # ── Etape 3 : connectivite des groupes (point 5) ──────────────────────────
+    # Pour chaque groupe, detecter les composantes connexes via le voisinage.
+    # Les fragments non-principaux (< composante la plus grande) sont reassignes
+    # au groupe voisin le plus representé parmi leurs voisins externes.
+    df_post <- sf::st_drop_geometry(data)
+    groupes_actifs <- unique(as.character(df_post[[new_var]]))
+
+    for (g in groupes_actifs) {
+      idx_g <- which(df_post[[new_var]] == g)
+      if (length(idx_g) <= 1) next
+
+      # Construire le graphe de voisinage interne au groupe
+      edges <- do.call(rbind, lapply(idx_g, function(i) {
+        vois <- unlist(nb[[i]])
+        vois <- vois[!is.na(vois) & vois > 0 & vois %in% idx_g]
+        if (length(vois) == 0) return(NULL)
+        cbind(match(i, idx_g), match(vois, idx_g))
+      }))
+
+      if (is.null(edges) || nrow(edges) == 0) next
+
+      gr     <- igraph::graph_from_edgelist(edges, directed = FALSE)
+      comps  <- igraph::components(gr)
+      if (comps$no <= 1) next  # groupe connexe, rien a faire
+
+      # Identifier les fragments (toutes les composantes sauf la plus grande)
+      comp_sizes  <- comps$csize
+      largest_id  <- which.max(comp_sizes)
+      fragment_ids <- setdiff(seq_len(comps$no), largest_id)
+
+      for (frag_id in fragment_ids) {
+        frag_vertices <- which(comps$membership == frag_id)
+        frag_idx      <- idx_g[frag_vertices]  # indices globaux
+
+        # Pour chaque commune du fragment, trouver ses voisins hors du groupe
+        voisins_ext <- unique(unlist(lapply(frag_idx, function(i) {
+          vois <- unlist(nb[[i]])
+          vois <- vois[!is.na(vois) & vois > 0 & !(vois %in% idx_g)]
+          df_post[[new_var]][vois]
+        })))
+        voisins_ext <- voisins_ext[!is.na(voisins_ext)]
+
+        if (length(voisins_ext) > 0) {
+          # Reassigner le fragment au groupe externe le plus representé
+          nouveau_groupe <- names(sort(table(voisins_ext), decreasing = TRUE))[1]
+          data[[new_var]][frag_idx]    <- nouveau_groupe
+          df_post[[new_var]][frag_idx] <- nouveau_groupe
+          modifie <- TRUE
+        }
       }
     }
 
